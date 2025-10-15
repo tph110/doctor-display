@@ -50,15 +50,17 @@
   <div id="display"></div>
 
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6isKQeI8cgW7iaTV4KfnUugomy_4cHq-RcpqTDj1haz0uJFqIYi08khnhm5JuudGXxD4hh117g0GR/pub?output=csv";
+    // Use AllOrigins proxy to bypass CORS
+    const baseSheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6isKQeI8cgW7iaTV4KfnUugomy_4cHq-RcpqTDj1haz0uJFqIYi08khnhm5JuudGXxD4hh117g0GR/pub?output=csv";
+    const sheetURL = "https://api.allorigins.win/raw?url=" + encodeURIComponent(baseSheetURL);
 
     async function loadData() {
       try {
         const response = await fetch(sheetURL);
         const csvText = await response.text();
 
-        // Parse CSV (simple split approach)
-        const rows = csvText.trim().split("\n").map(r => r.split(","));
+        // Parse CSV manually (handles simple CSVs from Google Sheets)
+        const rows = csvText.trim().split(/\r?\n/).map(r => r.split(","));
         const headers = rows[0].map(h => h.trim().toLowerCase());
         const doctors = rows.slice(1);
 
@@ -81,11 +83,14 @@
         });
       } catch (err) {
         console.error("Failed to load sheet:", err);
+        document.getElementById("display").innerHTML = `
+          <p style="color:red;">⚠️ Unable to load data from Google Sheets.<br>
+          Please check your internet connection or Sheet permissions.</p>`;
       }
     }
 
     loadData();
-    setInterval(loadData, 60000); // refresh every 10 seconds
+    setInterval(loadData, 60000); // refresh every 60 seconds
   </script>
 </body>
 </html>
