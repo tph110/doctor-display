@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Doctor Jones's Waiting Times</title>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="300"> <!-- fallback refresh every 5 minutes -->
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 30px;
+    }
+    .doctor {
+      display: inline-block;
+      background: #222;
+      padding: 20px;
+      margin: 15px;
+      border-radius: 15px;
+      width: 250px;
+      transition: transform 0.3s ease;
+    }
+    .doctor:hover {
+      transform: scale(1.05);
+    }
+    .light {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 10px auto;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    }
+    .green { background: #00ff00; box-shadow: 0 0 25px #00ff00; }
+    .amber { background: #ffff00; box-shadow: 0 0 25px #ffff00; }
+    .red { background: #ff0000; box-shadow: 0 0 25px #ff0000; }
+    .wait {
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Doctor Waiting Times</h1>
+  <div id="display"></div>
+
+  <script>
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6isKQeI8cgW7iaTV4KfnUugomy_4cHq-RcpqTDj1haz0uJFqIYi08khnhm5JuudGXxD4hh117g0GR/pub?output=csv";
+
+    async function loadData() {
+      try {
+        const response = await fetch(sheetURL);
+        const csvText = await response.text();
+
+        // Parse CSV (simple split approach)
+        const rows = csvText.trim().split("\n").map(r => r.split(","));
+        const headers = rows[0].map(h => h.trim().toLowerCase());
+        const doctors = rows.slice(1);
+
+        const display = document.getElementById("display");
+        display.innerHTML = "";
+
+        doctors.forEach(row => {
+          const data = {};
+          headers.forEach((h, i) => data[h] = (row[i] || "").trim());
+          const status = (data["status"] || "green").toLowerCase();
+
+          const div = document.createElement("div");
+          div.className = "doctor";
+          div.innerHTML = `
+            <h2>${data["doctor"] || "Unknown Doctor"}</h2>
+            <div class="light ${status}"></div>
+            <p class="wait">${data["wait"] || ""}</p>
+          `;
+          display.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Failed to load sheet:", err);
+      }
+    }
+
+    loadData();
+    setInterval(loadData, 60000); // ref
